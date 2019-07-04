@@ -36,3 +36,8 @@ locations of the various repositories and a location to build a system image in.
 
 Once building is complete, and provided that there are no errors, run `start_demo.py` to launch a QEmu instance that
 boots the kernel.
+
+## Building other applications
+
+So far, there are two external applications that (sort of) work with Azalea - Nasm and LD. Instructions for building
+these tools can be found in the app_build_instructions folder.
