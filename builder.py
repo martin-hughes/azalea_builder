@@ -22,27 +22,42 @@ def main(config):
 
   sys_image_root = config["PATHS"]["sys_image_root"]
 
+  print ("INSTALL KERNEL HEADERS")
+  print ("----------------------")
   with cd(config["PATHS"]["kernel_base"]):
     os.system("scons install-headers sys_image_root='%s'" % sys_image_root)
 
+  print ("")
+  print ("MAKE LIBC")
+  print ("---------")
   with cd(config["PATHS"]["libc_base"]):
     os.system("scons sys_image_root='%s'" % sys_image_root)
     os.system("scons install")
 
+  print ("")
+  print ("MAKE LIBC++")
+  print ("-----------")
   with cd(config["PATHS"]["libcxx_builder"]):
     os.system("python3 builder.py --sys_image_root='%s' --libcxx_base='%s' --kernel_base='%s'" %
               (sys_image_root, config["PATHS"]["libcxx_base"], config["PATHS"]["kernel_base"]))
 
+  print ("")
+  print ("MAKE ACPICA")
+  print ("-----------")
   with cd(config["PATHS"]["acpica_base"]):
     os.system("scons sys_image_root='%s'" % sys_image_root)
     os.system("scons install")
 
+  print ("")
+  print ("MAKE KERNEL")
+  print ("-----------")
   with cd(config["PATHS"]["kernel_base"]):
     os.system("scons sys_image_root='%s'" % sys_image_root)
 
   tz_path = os.path.abspath(os.path.join(sys_image_root, "system", "data", "timezones"))
   if not os.path.exists(tz_path):
     # Assume that if the path exists then timezone data has already been installed.
+    print ("")
     print ("Copying timezone information. This can take a minute or two.")
     shutil.copytree("/usr/share/zoneinfo", tz_path)
 
@@ -97,7 +112,12 @@ if __name__ == "__main__":
     args = argp.parse_args()
 
     flags = "r" if os.path.exists(args.config_file) else "a+"
-    cfg_file = open(args.config_file, flags)
+    try:
+      cfg_file = open(args.config_file, flags)
+    except (OSError, IOError):
+      print ("Unable to open file ", args.config_File, ". Check intermediate folders created.")
+      exit()
+
     cfg = configparser.ConfigParser()
     cfg.read_file(cfg_file)
     cfg_file.close()
