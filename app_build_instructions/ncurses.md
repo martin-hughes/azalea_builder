@@ -6,7 +6,8 @@ instructions were built using ncurses 6.1.
 *Note: ncurses support in Azalea is not yet complete, you will probably not successfully compile any programs linking
 to ncurses.*
 
-Simply execute the following commands, after editing the paths to reflect your system.
+Simply execute the following commands, after editing the paths to reflect your system. It is permissible to do an out-
+of-tree build for ncurses.
 
 ```
 export LDFLAGS='-L/xxx/azalea_sys_image/apps/developer/libc/lib -L/xxx/azalea_sys_image/apps/developer/kernel/lib -static'
@@ -17,9 +18,27 @@ export CPPFLAGS='-Wall -mno-red-zone -nostdinc -nostdinc++ -nostdlib -nodefaultl
 mkdir azalea_build
 cd azalea_build
 ../configure --host=x86_64-elf --with-build-cc=clang --without-ada --disable-db-install --without-manpages --without-progs --without-tack --without-tests --with-build-cc=clang --without-cxx-binding --prefix=/xxx/azalea_sys_image/apps/developer/ncurses --includedir=/xxx/azalea_sys_image/apps/developer/ncurses/include --libdir=/xxx/azalea_sys_image/apps/developer/ncurses/lib cf_cv_working_poll='yes'
+```
+
+Manually edit `{build_dir}/include/ncurses_cfg.h` to include the following two lines (replacing the old definitions)
+
+```
+#define TERMINFO_DIRS "\\root\\apps\\developer\\ncurses\\terminfo"
+#define TERMINFO "\\root\\apps\\developer\\ncurses\\terminfo"
+```
+
+In the function `make_dir_filename` (in read_entry.c), change the directory separator define from forward to backward
+slashes.
+
+Then execute
+
+```
 make
 make install
 ```
+
+Copy your system's terminfo database to `\root\apps\developer\ncurses` in the azalea system image tree.
+
 ## Notes:
 
 1. When configuring we set `cf_cv_working_poll` because the ncurses configure script assumes path names that don't
