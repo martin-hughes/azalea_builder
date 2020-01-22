@@ -37,7 +37,8 @@ make
 make install
 ```
 
-Copy your system's terminfo database to `\root\apps\developer\ncurses` in the azalea system image tree.
+Copy your system's terminfo database to `\root\apps\developer\ncurses` in the azalea system image tree. Also copy
+`root\apps\developer\ncurses\include\ncurses\ncurses.h` up one level to the `include` directory.
 
 ## Notes:
 
