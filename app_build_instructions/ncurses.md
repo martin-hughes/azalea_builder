@@ -27,6 +27,12 @@ Manually edit `{build_dir}/include/ncurses_cfg.h` to include the following two l
 #define TERMINFO "\\root\\apps\\developer\\ncurses\\terminfo"
 ```
 
+Also unset HAVE_SIGACTION in the same file as follows:
+
+```
+#define HAVE_SIGACTION 0
+```
+
 In the function `make_dir_filename` (in read_entry.c), change the directory separator define from forward to backward
 slashes.
 
