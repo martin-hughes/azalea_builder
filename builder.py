@@ -22,37 +22,28 @@ def main(config):
 
   sys_image_root = config["PATHS"]["sys_image_root"]
 
-  print ("INSTALL KERNEL HEADERS")
-  print ("----------------------")
-  with cd(config["PATHS"]["kernel_base"]):
-    os.system("scons install-headers sys_image_root='%s'" % sys_image_root)
+  simple_build("INSTALL KERNEL HEADERS",
+               config["PATHS"]["kernel_base"],
+               "scons install-headers sys_image_root='%s'" % sys_image_root)
 
-  print ("")
-  print ("MAKE LIBC")
-  print ("---------")
-  with cd(config["PATHS"]["libc_base"]):
-    os.system("scons sys_image_root='%s'" % sys_image_root)
-    os.system("scons install")
+  simple_build("MAKE LIBC",
+               config["PATHS"]["libc_base"],
+               "scons sys_image_root='%s'" % sys_image_root,
+               "scons install")
 
-  print ("")
-  print ("MAKE LIBC++")
-  print ("-----------")
-  with cd(config["PATHS"]["libcxx_builder"]):
-    os.system("python3 builder.py --sys_image_root='%s' --libcxx_base='%s' --kernel_base='%s'" %
-              (sys_image_root, config["PATHS"]["libcxx_base"], config["PATHS"]["kernel_base"]))
+  simple_build("MAKE LIBC++",
+               config["PATHS"]["kernel_base"],
+               ("python3 build_support/cxx_builder.py --sys_image_root='%s' --llvm_base='%s' --kernel_base='%s'" %
+                (sys_image_root, config["PATHS"]["llvm_base"], config["PATHS"]["kernel_base"])))
 
-  print ("")
-  print ("MAKE ACPICA")
-  print ("-----------")
-  with cd(config["PATHS"]["acpica_base"]):
-    os.system("scons sys_image_root='%s'" % sys_image_root)
-    os.system("scons install")
+  simple_build("MAKE ACPICA",
+               config["PATHS"]["acpica_base"],
+               "scons sys_image_root='%s'" % sys_image_root,
+               "scons install")
 
-  print ("")
-  print ("MAKE KERNEL")
-  print ("-----------")
-  with cd(config["PATHS"]["kernel_base"]):
-    os.system("scons sys_image_root='%s'" % sys_image_root)
+  simple_build("MAKE KERNEL",
+               config["PATHS"]["kernel_base"],
+               "scons sys_image_root='%s'" % sys_image_root)
 
   tz_path = os.path.abspath(os.path.join(sys_image_root, "system", "data", "timezones"))
   if not os.path.exists(tz_path):
@@ -74,6 +65,15 @@ def cd(newdir):
   finally:
     os.chdir(prevdir)
 
+def simple_build(name, path, *commands):
+  print("")
+  print(name)
+  print(len(name) * "-")
+  with cd(path):
+    for c in commands:
+      if os.system(c) != 0:
+        raise ChildProcessError("Failed to execute '" + name + "'")
+
 def regenerate_config(config, cmd_line_args):
   args_dict = vars(cmd_line_args)
 
@@ -84,8 +84,7 @@ def regenerate_config(config, cmd_line_args):
 
   populate_field(paths, args_dict, "kernel_base", "Kernel source base directory")
   populate_field(paths, args_dict, "libc_base", "Azalea Libc source base directory")
-  populate_field(paths, args_dict, "libcxx_builder", "Azalea Libc++ builder directory")
-  populate_field(paths, args_dict, "libcxx_base", "LLVM Libc++ source base directory")
+  populate_field(paths, args_dict, "llvm_base", "LLVM source base directory")
   populate_field(paths, args_dict, "acpica_base", "Azalea ACPICA source base directory")
   populate_field(paths, args_dict, "sys_image_root", "Azalea system image root directory")
 
@@ -104,8 +103,7 @@ if __name__ == "__main__":
     argp = argparse.ArgumentParser(description = "Project Azalea Builder helper")
     argp.add_argument("--kernel_base", type = str, help = "Location of the base of the Azalea kernel source code tree")
     argp.add_argument("--libc_base", type = str, help = "Location of the base of the Azalea Libc source code tree")
-    argp.add_argument("--libcxx_builder", type = str, help = "Location of the Azalea Libc++ builder script")
-    argp.add_argument("--libcxx_base", type = str, help = "Location of LLVM Libc++ source code tree")
+    argp.add_argument("--llvm_base", type = str, help = "Location of LLVM source code tree")
     argp.add_argument("--acpica_base", type = str, help = "Location of the base of the Azalea ACPICA source code tree")
     argp.add_argument("--sys_image_root", type = str, help = "Root of the Azalea system image's filesystem")
     argp.add_argument("--config_file", type = str, default = "config/saved_config.ini", help = "Config file location")
